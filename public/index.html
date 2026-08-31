@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelpDesk - Gestão de Chamados</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #16a34a;
+        --warning: #f59e0b;
+        --danger: #dc2626;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --border: #dfe7f1;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .topbar {
+        background: linear-gradient(135deg, #0f172a, #1d4ed8);
+        color: white;
+        padding: 18px 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .topbar h1 {
+        margin: 0;
+        font-size: 1.8rem;
+      }
+
+      .auth-box {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 24px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      label {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input, select, textarea, button {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 12px 14px;
+        font-size: 1rem;
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      button {
+        cursor: pointer;
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-weight: 700;
+        transition: 0.2s ease;
+      }
+
+      button:hover {
+        background: var(--primary-dark);
+      }
+
+      .secondary {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .secondary:hover {
+        background: #cbd5e1;
+      }
+
+      .danger {
+        background: var(--danger);
+      }
+
+      .danger:hover {
+        background: #b91c1c;
+      }
+
+      .status-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .status-aberto { background: #dbeafe; color: #1d4ed8; }
+      .status-atendimento { background: #fef3c7; color: #92400e; }
+      .status-concluido { background: #dcfce7; color: #166534; }
+
+      .ticket-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .ticket-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        background: #fbfdff;
+      }
+
+      .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .ticket-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .hidden { display: none !important; }
+
+      .message {
+        margin: 0 0 14px 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+
+      .message.success {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .message.error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .comments {
+        margin-top: 12px;
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+      }
+
+      .comment-item {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <h1>HelpDesk</h1>
+        <div class="auth-box">
+          <button id="logoutBtn" class="secondary hidden">Sair</button>
+        </div>
+      </header>
+
+      <div id="messageBox"></div>
+
+      <div class="grid">
+        <section class="card" id="authSection">
+          <h2>Login / Cadastro</h2>
+
+          <form id="authForm">
+            <div>
+              <label for="authMode">Tipo</label>
+              <select id="authMode">
+                <option value="login">Login</option>
+                <option value="register">Cadastro</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="nomeInput">Nome</label>
+              <input id="nomeInput" type="text" placeholder="Seu nome" />
+            </div>
+
+            <div>
+              <label for="emailInput">E-mail</label>
+              <input id="emailInput" type="email" placeholder="seu@email.com" required />
+            </div>
+
+            <div>
+              <label for="senhaInput">Senha</label>
+              <input id="senhaInput" type="password" placeholder="Sua senha" required />
+            </div>
+
+            <div>
+              <label for="tipoInput">Perfil</label>
+              <select id="tipoInput">
+                <option value="cliente">Cliente</option>
+                <option value="tecnico">Técnico</option>
+              </select>
+            </div>
+
+            <button type="submit" id="authSubmitBtn">Entrar</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Chamados</h2>
+
+          <form id="ticketForm">
+            <div>
+              <label for="tituloInput">Título</label>
+              <input id="tituloInput" type="text" placeholder="Ex: Sistema lento" required />
+            </div>
+
+            <div>
+              <label for="descricaoInput">Descrição</label>
+              <textarea id="descricaoInput" placeholder="Descreva o problema" required></textarea>
+            </div>
+
+            <div>
+              <label for="prioridadeInput">Prioridade</label>
+              <select id="prioridadeInput">
+                <option value="Baixa">Baixa</option>
+                <option value="Média" selected>Média</option>
+                <option value="Alta">Alta</option>
+                <option value="Urgente">Urgente</option>
+              </select>
+            </div>
+
+            <button type="submit">Abrir chamado</button>
+          </form>
+
+          <div class="ticket-list" id="ticketsList" style="margin-top: 22px;"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:3000/api';
+      const tokenKey = 'helpdesk_token';
+
+      const authForm = document.getElementById('authForm');
+      const authMode = document.getElementById('authMode');
+      const nomeInput = document.getElementById('nomeInput');
+      const emailInput = document.getElementById('emailInput');
+      const senhaInput = document.getElementById('senhaInput');
+      const tipoInput = document.getElementById('tipoInput');
+      const authSubmitBtn = document.getElementById('authSubmitBtn');
+      const ticketForm = document.getElementById('ticketForm');
+      const ticketsList = document.getElementById('ticketsList');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const messageBox = document.getElementById('messageBox');
+
+      function showMessage(text, type = 'success') {
+        messageBox.textContent = text;
+        messageBox.className = `message ${type}`;
+      }
+
+      function getToken() {
+        return localStorage.getItem(tokenKey);
+      }
+
+      function setToken(token) {
+        localStorage.setItem(tokenKey, token);
+      }
+
+      function clearToken() {
+        localStorage.removeItem(tokenKey);
+      }
+
+      function getAuthHeaders() {
+        const token = getToken();
+        return {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : ''
+        };
+      }
+
+      function toggleAuthMode() {
+        const isRegister = authMode.value === 'register';
+        nomeInput.closest('div').classList.toggle('hidden', !isRegister);
+        tipoInput.closest('div').classList.toggle('hidden', !isRegister);
+        authSubmitBtn.textContent = isRegister ? 'Cadastrar' : 'Entrar';
+      }
+
+      authMode.addEventListener('change', toggleAuthMode);
+
+      async function apiFetch(endpoint, options = {}) {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers: {
+            ...getAuthHeaders(),
+            ...(options.headers || {})
+          }
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Erro na requisição');
+        }
+
+        return data;
+      }
+
+      async function handleAuthSubmit(event) {
+        event.preventDefault();
+
+        const mode = authMode.value;
+        const payload = {
+          email: emailInput.value,
+          senha: senhaInput.value
+        };
+
+        if (mode === 'register') {
+          payload.nome = nomeInput.value;
+          payload.tipo = tipoInput.value;
+        }
+
+        try {
+          const route = mode === 'register' ? '/auth/register' : '/auth/login';
+          const result = await apiFetch(route, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          setToken(result.token);
+          showMessage(mode === 'register' ? 'Cadastro realizado com sucesso!' : 'Login realizado com sucesso!');
+          loadTickets();
+          renderSessionState();
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      async function loadTickets() {
+        if (!getToken()) {
+          ticketsList.innerHTML = '<p>Faça login para visualizar os chamados.</p>';
+          return;
+        }
+
+        try {
+          const result = await apiFetch('/tickets');
+          renderTickets(result.tickets || []);
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      function renderTickets(tickets) {
+        if (!tickets.length) {
+          ticketsList.innerHTML = '<p>Nenhum chamado encontrado.</p>';
+          return;
+        }
+
+        ticketsList.innerHTML = tickets.map(ticket => {
+          const statusClass = ticket.status === 'Aberto'
+            ? 'status-aberto'
+            : ticket.status === 'Em Atendimento'
+              ? 'status-atendimento'
+              : 'status-concluido';
+
+          return `
+            <article class="ticket-item" data-id="${ticket.id}">
+              <div class="ticket-header">
+                <h3>${ticket.titulo}</h3>
+                <span class="status-pill ${statusClass}">${ticket.status}</span>
+              </div>
+              <div class="meta">
+                Cliente: ${ticket.cliente_nome || 'N/A'} · Prioridade: ${ticket.prioridade || 'Média'}
+              </div>
+              <p>${ticket.descricao}</p>
+
+              <div class="actions">
+                <button class="secondary status-btn" data-action="status" data-id="${ticket.id}" data-status="Em Atendimento">Em atendimento</button>
+                <button class="secondary status-btn" data-action="status" data-id="${ticket.id}" data-status="Concluído">Concluir</button>
+                <button class="danger delete-btn" data-action="delete" data-id="${ticket.id}">Excluir</button>
+              </div>
+
+              <div class="comments">
+                <strong>Comentários</strong>
+                <div class="comment-list" data-comment-list="${ticket.id}"></div>
+                <div class="comment-form">
+                  <textarea data-comment-input="${ticket.id}" placeholder="Escreva um comentário..."></textarea>
+                  <button class="secondary comment-btn" data-id="${ticket.id}">Adicionar comentário</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        attachTicketEvents();
+        loadCommentsForAllTickets();
+      }
+
+      async function loadCommentsForAllTickets() {
+        const ticketItems = document.querySelectorAll('.ticket-item');
+
+        for (const item of ticketItems) {
+          const ticketId = item.dataset.id;
+          try {
+            const data = await apiFetch(`/tickets/${ticketId}/comments`);
+            const list = item.querySelector('[data-comment-list]');
+            list.innerHTML = (data.comments || []).map(comment => `
+              <div class="comment-item">
+                <strong>${comment.nome}</strong>
+                <div class="meta">${new Date(comment.created_at).toLocaleString()}</div>
+                <div>${comment.mensagem}</div>
+              </div>
+            `).join('') || '<p>Sem comentários.</p>';
+          } catch (error) {
+            console.error('Erro ao carregar comentários:', error);
+          }
+        }
+      }
+
+      async function addComment(ticketId, message) {
+        try {
+          await apiFetch(`/tickets/${ticketId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ mensagem: message })
+          });
+          await loadTickets();
+          showMessage('Comentário adicionado com sucesso!');
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      async function updateTicketStatus(ticketId, status) {
+        try {
+          await apiFetch(`/tickets/${ticketId}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status })
+          });
+          await loadTickets();
+          showMessage('Status atualizado com sucesso!');
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      async function deleteTicket(ticketId) {
+        try {
+          await apiFetch(`/tickets/${ticketId}`, {
+            method: 'DELETE'
+          });
+          await loadTickets();
+          showMessage('Chamado removido com sucesso!');
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      function attachTicketEvents() {
+        document.querySelectorAll('.status-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            updateTicketStatus(button.dataset.id, button.dataset.status);
+          });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            deleteTicket(button.dataset.id);
+          });
+        });
+
+        document.querySelectorAll('.comment-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            const ticketId = button.dataset.id;
+            const input = document.querySelector(`[data-comment-input="${ticketId}"]`);
+            if (input && input.value.trim()) {
+              addComment(ticketId, input.value.trim());
+            }
+          });
+        });
+      }
+
+      async function handleTicketSubmit(event) {
+        event.preventDefault();
+
+        if (!getToken()) {
+          showMessage('Faça login antes de abrir um chamado.', 'error');
+          return;
+        }
+
+        try {
+          await apiFetch('/tickets', {
+            method: 'POST',
+            body: JSON.stringify({
+              titulo: document.getElementById('tituloInput').value,
+              descricao: document.getElementById('descricaoInput').value,
+              prioridade: document.getElementById('prioridadeInput').value
+            })
+          });
+
+          ticketForm.reset();
+          await loadTickets();
+          showMessage('Chamado aberto com sucesso!');
+        } catch (error) {
+          showMessage(error.message, 'error');
+        }
+      }
+
+      function renderSessionState() {
+        const token = getToken();
+        const authSection = document.getElementById('authSection');
+        logoutBtn.classList.toggle('hidden', !token);
+        authSection.classList.toggle('hidden', !!token);
+      }
+
+      logoutBtn.addEventListener('click', () => {
+        clearToken();
+        renderSessionState();
+        loadTickets();
+        showMessage('Sessão encerrada.', 'success');
+      });
+
+      authForm.addEventListener('submit', handleAuthSubmit);
+ticketForm.addEventListener('submit', handleTicketSubmit);
+
+toggleAuthMode();
+renderSessionState();
+loadTickets();
+    </script>
+  </body>
+</html>

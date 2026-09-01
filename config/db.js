@@ -10,7 +10,10 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   charset: 'utf8mb4',
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 20000
 });
 
 async function testConnection() {

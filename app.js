@@ -14,7 +14,7 @@ const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowedOrigins = [frontendUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'];
+           const allowedOrigins = [frontendUrl, 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://rest-rec-1.onrender.com'];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
         return;

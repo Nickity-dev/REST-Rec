@@ -10,6 +10,10 @@ const swaggerOptions = {
     },
     servers: [
       {
+        url: 'https://rest-rec-1.onrender.com',
+        description: 'Servidor de produção (Render)'
+      },
+      {
         url: 'http://localhost:3000',
         description: 'Servidor local'
       }

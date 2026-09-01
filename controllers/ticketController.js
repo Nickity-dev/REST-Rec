@@ -53,18 +53,32 @@ async function listTickets(req, res) {
  */
 async function createTicket(req, res) {
   try {
-    const { titulo, descricao, prioridade = 'Média', tecnico_id = null } = req.body;
+        const { titulo, descricao, prioridade = 'Media' } = req.body;
+    let { tecnico_id } = req.body;
 
     if (!titulo || !descricao) {
       return res.status(400).json({ success: false, message: 'Título e descrição são obrigatórios.' });
+    }
+
+    // Trata 0, undefined ou string vazia como "sem técnico atribuído"
+    tecnico_id = tecnico_id ? Number(tecnico_id) : null;
+
+    // Se um técnico foi informado, valida se ele existe antes de tentar inserir
+    if (tecnico_id !== null) {
+      const [tecnicoRows] = await pool.execute(
+        "SELECT id FROM usuarios WHERE id = ? AND tipo = 'tecnico'",
+        [tecnico_id]
+      );
+      if (tecnicoRows.length === 0) {
+        return res.status(400).json({ success: false, message: 'Técnico informado não existe.' });
+      }
     }
 
     const status = 'Aberto';
     const [result] = await pool.execute(
       'INSERT INTO chamados (titulo, descricao, status, prioridade, cliente_id, tecnico_id) VALUES (?, ?, ?, ?, ?, ?)',
       [titulo.trim(), descricao.trim(), status, prioridade, req.user.id, tecnico_id]
-    );
-
+    ); 
     const [rows] = await pool.execute(
       `SELECT c.id, c.titulo, c.descricao, c.status, c.prioridade, c.created_at, c.updated_at,
               u.id AS cliente_id, u.nome AS cliente_nome, u.email AS cliente_email
@@ -127,7 +141,7 @@ async function updateTicketStatus(req, res) {
   try {
     const ticketId = Number(req.params.id);
     const { status } = req.body;
-    const allowedStatuses = ['Aberto', 'Em Atendimento', 'Concluído'];
+   const allowedStatuses = ['Aberto', 'Em Atendimento', 'Concluido'];
 
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Status inválido.' });
